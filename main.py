@@ -76,3 +76,12 @@ def create(cliente: ClienteRequest):
     novo_cliente.id = db_clientes[-1].id + 1
     db_clientes.append(novo_cliente)
     return {"mensagem": "Cliente adicionado na fila.", "status": 201}
+
+
+@app.put("/fila")
+def update():
+    for cliente in db_clientes:
+        cliente.id -= 1
+        if cliente.id == 0:
+            cliente.status_atendimento = True
+    return {"mensagem": "Fila atualizada com sucesso.", "status": 200}
