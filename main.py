@@ -4,6 +4,7 @@ from typing import Optional, Literal, List
 from fastapi import FastAPI
 from pydantic import BaseModel, constr
 
+
 app = FastAPI()
 
 
@@ -33,3 +34,11 @@ def get_all():
         if cliente.status_atendimento == False:
             resposta.append({"posicao": cliente.id, "nome": cliente.nome, "data_chegada": cliente.data})
     return {"data": resposta, "status": 200}
+
+
+@app.get("/fila/{id}")
+def get_by_id(id: int):
+    for cliente in db_clientes:
+        if cliente.id == id:
+            return {"posicao": cliente.id, "nome": cliente.nome, "data_chegada": cliente.data}
+    return {"mensagem": "Cliente não localizado.", "status": 404}
