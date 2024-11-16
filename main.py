@@ -10,7 +10,7 @@ app = FastAPI()
 
 # Entity Cliente
 class Cliente(BaseModel):
-    id: Optional[int] = None
+    id: Optional[int] = 0
     nome: constr(max_length=20)
     tipo_atendimento: Literal['N', 'P']
     data: datetime
@@ -78,12 +78,45 @@ def create(cliente: ClienteRequest):
     return {"mensagem": "Cliente adicionado na fila.", "status": 201}
 
 
+@app.post("/fila/prioridade")
+def create_prioridade(cliente: ClienteRequest):
+    novo_cliente = Cliente(
+        nome=cliente.nome,
+        tipo_atendimento=cliente.tipo_atendimento,
+        data=datetime.now(),
+        status_atendimento=False
+    )
+    novo_cliente.id = db_clientes[-1].id + 1
+    # Adicionando cliente com base no tipo de atendimento (normal ou prioritário)
+    if novo_cliente.tipo_atendimento == 'P':
+        for i, cliente_fila in enumerate(db_clientes):
+            if cliente_fila.tipo_atendimento == 'N':
+                db_clientes.insert(i, novo_cliente)
+                break
+        else:
+            db_clientes.insert(0, novo_cliente)
+    else:
+        db_clientes.append(novo_cliente)
+    return {"mensagem": "Cliente adicionado na fila.", "status": 201}
+
+
 @app.put("/fila")
 def update():
     for cliente in db_clientes:
         cliente.id -= 1
         if cliente.id == 0:
             cliente.status_atendimento = True
+    return {"mensagem": "Fila atualizada com sucesso.", "status": 200}
+
+
+@app.put("/fila/prioridade")
+def update_prioridade():
+    # Ordenando por prioridade (prioritário > normal)
+    clientes_ordenados = sorted(db_clientes, key=lambda c: c.tipo_atendimento != 'P')
+    for cliente in clientes_ordenados:
+        if cliente.status_atendimento == False:
+            cliente.status_atendimento = True
+            break
     return {"mensagem": "Fila atualizada com sucesso.", "status": 200}
 
 
