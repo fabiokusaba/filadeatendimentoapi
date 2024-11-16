@@ -85,3 +85,15 @@ def update():
         if cliente.id == 0:
             cliente.status_atendimento = True
     return {"mensagem": "Fila atualizada com sucesso.", "status": 200}
+
+
+@app.delete("/fila/{id}")
+def delete(id: int):
+    for i, cliente in enumerate(db_clientes):
+        if cliente.id == id:
+            db_clientes.remove(cliente)
+            # Atualizando os IDs dos clientes
+            for i in range(i, len(db_clientes)):
+                db_clientes[i].id -= 1
+            return {"mensagem": "Cliente removido da fila com sucesso", "status": 200}
+    return {"mensagem": "Cliente não localizado na posição especificada", "status": 404}
